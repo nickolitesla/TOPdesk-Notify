@@ -1,11 +1,9 @@
 /* 
   index.ts
-  This is the entry point for the app
+  This is the entry point for the app.
 
   @created: 7/26/2022
   @author: Nick Fowler
-
-
  */
 
 import { AdaptiveCards } from "@microsoft/adaptivecards-tools";
@@ -13,10 +11,17 @@ import * as restify from "restify";
 import notificationTemplate from "./adaptiveCards/notification-default.json";
 import { bot } from "./internal/initialize";
 import { CardData } from "./cardModels";
+import axios from "axios";
 
 // API call every 10s to see if there is a new ticket in First line
 // Filter by JSON fields "clientReferenceNumber", "status", "number"
-
+axios.get('https://fagron.topdesk.net/tas/api/incidents', {
+  headers: {
+    Accept: 'application/json',
+  },
+}).then(res => {
+    console.log(res.data);
+  })
 
 // Create HTTP server.
 const server = restify.createServer();
