@@ -13,20 +13,44 @@ import { bot } from "./internal/initialize";
 import { CardData } from "./cardModels";
 import axios from "axios";
 
+
+const token = process.env.TOPDESK_API_TOKEN;
+console.log(token);
+
 // API call every 10s to see if there is a new ticket in First line
 // Filter by JSON fields "clientReferenceNumber", "status", "number"
-axios.get('https://fagron.topdesk.net/tas/api/incidents', {
-  headers: {
-    Accept: 'application/json',
-  },
-}).then(res => {
-    console.log(res.data);
-  })
+async function getIncidents() {
+  try {
+    axios.get('https://fagron.topdesk.net/tas/api/incidents', {
+    headers: {
+        Accept: 'application/json',
+        Authorization: `${token}`,
+      },
+      params: {
+        number: 'I22071143'
+      }
+    }).then(res => {
+      var data = res.data;
+      console.log(res.data.length);
+      return res.data;
+    }) 
+  }
+  catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.log('error message: ', error.message);
+      return error.message;
+    }
+    else {
+      console.log('unexpected error: ', error);
+      return 'An unexpected error occurred';
+    }
+ }
+}
+getIncidents();
 
 // Create HTTP server.
 const server = restify.createServer();
 
-console.log(server)
 server.listen(process.env.port || process.env.PORT || 3978, () => {
   console.log(`\nBot Started, ${server.name} listening to ${server.url}`);
 });
