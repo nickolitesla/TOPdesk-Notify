@@ -15,38 +15,7 @@ import axios from "axios";
 
 
 const token = process.env.TOPDESK_API_TOKEN;
-console.log(token);
 
-// API call every 10s to see if there is a new ticket in First line
-// Filter by JSON fields "clientReferenceNumber", "status", "number"
-async function getIncidents() {
-  try {
-    axios.get('https://fagron.topdesk.net/tas/api/incidents', {
-    headers: {
-        Accept: 'application/json',
-        Authorization: `${token}`,
-      },
-      params: {
-        number: 'I22071143'
-      }
-    }).then(res => {
-      var data = res.data;
-      console.log(res.data.length);
-      return res.data;
-    }) 
-  }
-  catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.log('error message: ', error.message);
-      return error.message;
-    }
-    else {
-      console.log('unexpected error: ', error);
-      return 'An unexpected error occurred';
-    }
- }
-}
-getIncidents();
 
 // Create HTTP server.
 const server = restify.createServer();
@@ -54,8 +23,6 @@ const server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, () => {
   console.log(`\nBot Started, ${server.name} listening to ${server.url}`);
 });
-
-
 
 // Register an API endpoint with `restify`.
 //
@@ -68,27 +35,31 @@ server.listen(process.env.port || process.env.PORT || 3978, () => {
 //
 // You can add authentication / authorization for this API. Refer to
 // https://aka.ms/teamsfx-notification for more details.
+
 server.post(
   "/api/notification",
   restify.plugins.queryParser(),
   restify.plugins.bodyParser(), // Add more parsers if needed
   async (req, res) => {
-    
+  
+    // create variables to store the info from request
+    // ticket brief descp, number / caller, request, link to ticket respectively
+    var title = req.body.briefDescription;
+    var appName = req.body.number + " | " + req.body.caller.dynamicName;
+    var description = req.body.request;
+    var notificationUrl = "https://fagron.topdesk.net/tas/secure/incident?action=lookup&lookup=naam&lookupValue=" + req.body.number;
+
     // By default this function will iterate all the installation points and send an Adaptive Card
     // to every installation.
     for (const target of await bot.notification.installations()) {
-      console.log(req.body);
-      
-      // create variables to store the info from request
-      var title = req.body.title;
-
 
       await target.sendAdaptiveCard(
         AdaptiveCards.declare<CardData>(notificationTemplate).render({
           title: title,
-          appName: "Contoso App Notification",
-          description: `This is a sample http-triggered notification to ${target.type}`,
-          notificationUrl: "https://www.adaptivecards.io/",
+          appName: appName,
+          description: description,
+          //description: `This is a sample http-triggered notification to ${target.type}`,
+          notificationUrl: notificationUrl,
         })
       );
 
@@ -142,9 +113,165 @@ server.post(
   }
 );
 
-// The Teams Toolkit bot registration configures the bot with `/api/messages` as the
-// Bot Framework endpoint. If you customize this route, update the Bot registration
-// in `/templates/provision/bot.bicep`.
-server.post("/api/messages", async (req, res) => {
-  await bot.requestHandler(req, res);
-});
+
+  // The Teams Toolkit bot registration configures the bot with `/api/messages` as the
+  // Bot Framework endpoint. If you customize this route, update the Bot registration
+  // in `/templates/provision/bot.bicep`.
+  server.post("/api/messages", async (req, res) => {
+    await bot.requestHandler(req, res);
+  });
+
+// this variable is for the last ticket we sent in a card
+var lastTicket = '';
+
+const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 COM313 COM317 COM333 COM335"
+
+// API call every 10s to see if there is a new ticket in First line
+// Filter by JSON fields "clientReferenceNumber", "status", "number"
+// the API only gives 10 incidents at a time
+// tickets from API order neweset (1) to oldest (10)
+async function getIncidents() {
+ 
+    try {
+      axios.get('https://fagron.topdesk.net/tas/api/incidents', {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `${token}`,
+        }
+      }).then(res => {
+
+        // get data variable
+        var data = res.data;
+
+        console.log("last ticket in getIncidents:" + lastTicket);
+        checkLastTicket(data);
+        console.log("made it out of check with last ticket: " + lastTicket + "\n")
+      })
+    }
+    catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.log('error message: ', error.message);
+        return error.message;
+      }
+      else {
+        console.log('unexpected error: ', error);
+        return 'An unexpected error occurred';
+      }
+    }
+}
+
+// function that will set last ticket 
+function checkLastTicket(data) {
+   
+  // COMxxx list for NA
+  const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 COM313 COM317 COM333 COM335"
+
+  // if lastTicket is empty
+  if (lastTicket == '') {
+    console.log('lastTicket is empty')
+    
+    // loop over json to find newest ticket
+    // once lastTicket gets assigned value exit
+    let i = 0;
+    while((i < data.length) && lastTicket == ""){
+      
+      // if ticket is valid send post
+      if (checkValid(data[i])) {
+        lastTicket = data[i].number;
+        sendPost(data[i])
+      }
+  
+      i++;
+    }
+    
+  }
+
+  // if lastTicket has a value we will run this code
+  else {
+    console.log('lastTicket is not empty')
+
+    let i = 0;
+    let tempTicket = "";
+
+    // loop json until we reach end of json array
+    // or we find the last ticket 
+    while((i < data.length) && lastTicket != tempTicket) {
+      
+      // set tempTicket before we think of posting
+      tempTicket = data[i].number;
+
+      // check if ticket is valid
+      if (checkValid(data[i])) {
+        console.log("Temporary Ticket: " + tempTicket);
+        console.log("Last ticket: " + lastTicket);
+        
+        // make sure we are not reposting the same ticket
+        if (tempTicket != lastTicket) {
+          lastTicket = data[i].number;
+          sendPost(data[i]);
+        }
+        
+        // Just checking to see that the ticket numbers actually match
+        else {
+          console.log(tempTicket + " Temp Ticket = " + lastTicket + " Last Ticket");
+        }
+      }  
+      i++;
+    }
+  }
+
+  console.log("Last ticket at end of checkLastTicket():" + lastTicket)
+
+  return lastTicket;
+}
+
+// check if ticket is in COMXXX, not closed, and firstline
+function checkValid(data) {
+  console.log("in checkValid() testing: " + data.caller.branch.clientReferenceNumber);
+  let valid; 
+  // checks to see if ticket is in acceptableCOM and not Closed and firstLine
+  if (acceptableCOM.includes(data.caller.branch.clientReferenceNumber) && (data.closed == false) && (data.status == "firstLine")) {
+    console.log(data.caller.branch.clientReferenceNumber + ": Acceptable COM & Not Closed & In FL");
+    valid = true;
+  }
+
+  // if the last ticket received is closed then return lastTicket as that
+  if (acceptableCOM.includes(data.caller.branch.clientReferenceNumber) && (data.closed == true) && (data.status == "firstLine")) {
+    console.log(data.caller.branch.clientReferenceNumber) + ": Acceptable COM & Closed";
+    valid = true;
+  }
+
+  return valid;
+}
+
+// send post request to my HTTP server
+function sendPost(data) {
+
+  console.log("in sendPost()");
+  
+  try {
+    // send post to teams server
+    console.log("in try")
+    axios.post('http://localhost:3978/api/notification', data).then((res) => {
+      console.log('Status: ' + res.status);
+    }).catch((e) => {
+      console.error(e);
+    })
+  }catch (e) {
+    if (axios.isAxiosError(e)) {
+      console.log('error message: ', e.message);
+      return e.message;
+    }
+    else {
+      console.log('unexpected error: ', e);
+      return 'An unexpected error occurred';
+    }
+  }
+}
+
+setInterval(getIncidents, 10 * 1000);
+
+
+
+
+
