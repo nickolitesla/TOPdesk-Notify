@@ -1,4 +1,5 @@
 import { ConversationBot } from "@microsoft/teamsfx";
+import { setValuesCommandHandler } from "../setValuesCommandHandler";
 
 // Create bot.
 export const bot = new ConversationBot({
@@ -12,4 +13,8 @@ export const bot = new ConversationBot({
   notification: {
     enabled: true,
   },
+  command: {
+    enabled: true,
+    commands: [new setValuesCommandHandler()],
+  }
 });

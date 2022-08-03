@@ -35,6 +35,12 @@
             "isNotificationOnly": false
         }
     ],
+    "commandLists": [
+        {
+            "title": "setValuesCommandHandler",
+            "description": "description of setValuesCommandHandler"
+        }
+    ],
     "composeExtensions": [],
     "configurableTabs": [],
     "staticTabs": [],

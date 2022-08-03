@@ -47,21 +47,54 @@ server.post(
     var title = req.body.briefDescription;
     var appName = req.body.number + " | " + req.body.caller.dynamicName;
     var description = req.body.request;
+
+    // Images are processed as ※ and need to be removed
+    description = description.replace(/※/g, '');
+
+    let i = 0;
+    let count = 0;
+
+    // make a new line after users name 
+    // need \n\n to do newline in teams card
+    while (i < description.length) {
+      
+      // if we find : increment count
+      if (description[i] == ":") {
+        count++;
+      }
+      
+      // once we reached the 3 : we enter newline after it
+      // i+1 makes it so we are after the last :
+      if (count == 3) {
+        description = description.replace(description.substring(0, i+1) , '$& \n\n');
+        break;
+      }
+
+      i++;
+    }
+
+    // max 350 characters in 
+    description = description.substring(0, 350)
+   
+
     var notificationUrl = "https://fagron.topdesk.net/tas/secure/incident?action=lookup&lookup=naam&lookupValue=" + req.body.number;
 
     // By default this function will iterate all the installation points and send an Adaptive Card
     // to every installation.
     for (const target of await bot.notification.installations()) {
 
-      await target.sendAdaptiveCard(
-        AdaptiveCards.declare<CardData>(notificationTemplate).render({
-          title: title,
-          appName: appName,
-          description: description,
-          //description: `This is a sample http-triggered notification to ${target.type}`,
-          notificationUrl: notificationUrl,
-        })
-      );
+      // sends notification to that Person
+      if(target.type === "Person"){
+        await target.sendAdaptiveCard(
+          AdaptiveCards.declare<CardData>(notificationTemplate).render({
+            title: title,
+            appName: appName,
+            description: description,
+            //description: `This is a sample http-triggered notification to ${target.type}`,
+            notificationUrl: notificationUrl,
+          })
+        );
+      }
 
       // Note - you can filter the installations if you don't want to send the event to every installation.
 
@@ -123,6 +156,7 @@ server.post(
 
 // this variable is for the last ticket we sent in a card
 var lastTicket = '';
+var apiCallCount = 0;
 
 const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 COM313 COM317 COM333 COM335"
 
@@ -131,19 +165,27 @@ const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 C
 // the API only gives 10 incidents at a time
 // tickets from API order neweset (1) to oldest (10)
 async function getIncidents() {
- 
+  
+  // count how many times we've called the TOPdesk API
+  apiCallCount = apiCallCount + 1;
+  console.log(apiCallCount);
+
     try {
       axios.get('https://fagron.topdesk.net/tas/api/incidents', {
         headers: {
           Accept: 'application/json',
           Authorization: `${token}`,
+        },
+        params: {
+          all: true,
+          fields: 'number, caller, responded, status, briefDescription, dynamicName, caller.branch.clientReferenceNumber, caller.dynamicName, request' 
         }
       }).then(res => {
 
         // get data variable
         var data = res.data;
 
-        console.log("last ticket in getIncidents:" + lastTicket);
+        console.log("last ticket in getIncidents: " + lastTicket);
         checkLastTicket(data);
         console.log("made it out of check with last ticket: " + lastTicket + "\n")
       })
@@ -151,11 +193,11 @@ async function getIncidents() {
     catch (error) {
       if (axios.isAxiosError(error)) {
         console.log('error message: ', error.message);
-        return error.message;
+        throw error.message;
       }
       else {
         console.log('unexpected error: ', error);
-        return 'An unexpected error occurred';
+        throw 'An unexpected error occurred';
       }
     }
 }
@@ -225,23 +267,46 @@ function checkLastTicket(data) {
   return lastTicket;
 }
 
-// check if ticket is in COMXXX, not closed, and firstline
+// check if ticket is in COMXXX, not responded, and firstline
 function checkValid(data) {
-  console.log("in checkValid() testing: " + data.caller.branch.clientReferenceNumber);
+  
   let valid; 
+
+  // if caller is empty we need to return the ticket
+  // might be false positive 
+  // keeps this from breaking
+  if (data.caller.branch == null) {
+    data.caller.branch == '';
+    valid = true;
+    return valid;
+  }
+  
+  console.log("in checkValid() testing: " + data.caller.branch.clientReferenceNumber);
+  
   // checks to see if ticket is in acceptableCOM and not Closed and firstLine
-  if (acceptableCOM.includes(data.caller.branch.clientReferenceNumber) && (data.closed == false) && (data.status == "firstLine")) {
-    console.log(data.caller.branch.clientReferenceNumber + ": Acceptable COM & Not Closed & In FL");
+  if ((acceptableCOM.includes(data.caller.branch.clientReferenceNumber) || data.caller.branch.clientReferenceNumber == null) && (data.responded == false) && (data.status == "firstLine")) {
+    console.log(data.caller.branch.clientReferenceNumber + ": Acceptable COM & Not Responded & In FL");
     valid = true;
+    return valid;
   }
 
-  // if the last ticket received is closed then return lastTicket as that
-  if (acceptableCOM.includes(data.caller.branch.clientReferenceNumber) && (data.closed == true) && (data.status == "firstLine")) {
-    console.log(data.caller.branch.clientReferenceNumber) + ": Acceptable COM & Closed";
+  // if the last ticket received is closed then set lastTicket as that
+  if (acceptableCOM.includes(data.caller.branch.clientReferenceNumber) && (data.responded == true) && (data.status == "firstLine")) {
+    console.log(data.caller.branch.clientReferenceNumber) + ": Acceptable COM & Responded";
     valid = true;
+    return valid
   }
 
-  return valid;
+  // checks tickets to see if lastest ticket is archived and sets to latest ticket
+  // this avoids bug that would print ticket 1 once when it comes in, ticket 2 comes in,
+  // ticket 2 gets archived, then ticket 1 would be printed again since ticket 2 updated lastTicket
+  if (acceptableCOM.includes(data.caller.branch.clientReferenceNumber) && (data.responded == true) && (data.status == "firstLineArchived")) {
+    console.log(data.caller.branch.clientReferenceNumber + ": Acceptable COM & Not Responded & In FL");
+    lastTicket = data.number;
+    console.log("Latest ticket is archived but is still set to last ticket: " + lastTicket);
+    valid = false;
+    return valid;
+  }
 }
 
 // send post request to my HTTP server
@@ -250,6 +315,7 @@ function sendPost(data) {
   console.log("in sendPost()");
   
   try {
+
     // send post to teams server
     console.log("in try")
     axios.post('http://localhost:3978/api/notification', data).then((res) => {
