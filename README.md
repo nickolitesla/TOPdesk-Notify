@@ -9,7 +9,9 @@ Pre-requisites:
 - A TOPdesk API password (Use this link to setup - https://developers.topdesk.com/tutorial.html)
 - Teams Toolkit Extension in vscode
 
-After cloning the repository you will need a .env.teamsfx.local file in bot/src. You will need to at least provide a BOT_ID, BOT_PASSWORD, and TOPDESK_API_TOKEN. Not sure how to generate BOT_ID & BOT_PASSWORD; I haven't tried doing this without the Teams Toolkit yet so I will update once I know how this is done. 
+After cloning the repository you will need a .env.teamsfx.local file in bot/src. You will need to at least provide a BOT_ID, BOT_PASSWORD, and TOPDESK_API_TOKEN. Not sure how to generate BOT_ID & BOT_PASSWORD; I haven't tried doing this without the Teams Toolkit yet so I will update once I know how this is done.
+
+You will need to run "npm i" in both the "TOPDesk Notify" & "bot" folder. 
 
 After this step there are variables that will need changed; though I'm currently working on changing the way these variables are set - getting user input instead of set in app. 
 
