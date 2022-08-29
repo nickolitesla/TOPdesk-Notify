@@ -12,6 +12,7 @@
     "license": "MIT",
     "dependencies": {
         "@microsoft/adaptivecards-tools": "^1.0.1",
+        "adaptive-expressions": "^4.17.0",
         "axios": "^0.27.2"
     }
 }

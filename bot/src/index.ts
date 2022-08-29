@@ -4,6 +4,7 @@
 
   @created: 7/26/2022
   @author: Nick Fowler
+  
  */
 
 import { AdaptiveCards } from "@microsoft/adaptivecards-tools";
