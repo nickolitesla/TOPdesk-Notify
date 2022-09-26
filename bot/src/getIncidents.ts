@@ -15,7 +15,7 @@ export async function getIncidents() {
 console.count();
 
     try {
-    axios.get('https://fagron.topdesk.net/tas/api/incidents', {
+    await axios.get('https://fagron.topdesk.net/tas/api/incidents', {
         headers: {
         Accept: 'application/json',
         Authorization: `${token}`,
@@ -34,13 +34,13 @@ console.count();
         console.log("made it out of check with last ticket: " + lastTicket + "\n")
     })
     }
-    catch (error) {
-    if (axios.isAxiosError(error)) {
-        console.log('error message: ', error.message);
-        throw error.message;
+    catch (err) {
+    if (axios.isAxiosError(err)) {
+        console.log('error message: ', err.message);
+        throw err.message;
     }
     else {
-        console.log('unexpected error: ', error);
+        console.log('unexpected error: ', err);
         throw 'An unexpected error occurred';
     }
     }

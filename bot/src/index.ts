@@ -61,7 +61,7 @@ server.post(
         count++;
       }
       
-      // once we reached the 3 : we enter newline after it
+      // once we reached the 3rd : we enter newline after it
       // i+1 makes it so we are after the last :
       if (count == 3) {
         description = description.replace(description.substring(0, i+1) , '$& \n\n');

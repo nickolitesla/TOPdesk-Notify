@@ -1,8 +1,8 @@
 {
-    "name": "notification-restify-bot",
-    "version": "1.0.0",
-    "description": "Microsoft Teams Toolkit Notification Bot Sample (Restify)",
-    "author": "Microsoft",
+    "name": "TOPdesk Notification Bot",
+    "version": "1.0.1",
+    "description": "TOPdesk notification bot",
+    "author": "Nick Fowler",
     "license": "MIT",
     "main": "./lib/index.js",
     "scripts": {

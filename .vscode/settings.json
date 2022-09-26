@@ -7,5 +7,7 @@
             ],
             "schema": {}
         }
-    ]
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/c5097d95-c05b-423a-898c-05c682ba9d1b/AppServices/subscriptions/c5097d95-c05b-423a-898c-05c682ba9d1b/resourceGroups/TOPdeskNotify-rg/providers/Microsoft.Web/sites/TOPdesk-Notify",
+    "appService.deploySubpath": "."
 }

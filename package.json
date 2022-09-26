@@ -2,7 +2,7 @@
     "name": "TOPdesk Notify",
     "version": "0.0.1",
     "description": "",
-    "author": "",
+    "author": "Nick Fowler",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
