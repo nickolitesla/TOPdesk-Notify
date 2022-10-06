@@ -15,7 +15,7 @@ export async function getIncidents() {
 console.count();
 
     try {
-    await axios.get('https://fagron.topdesk.net/tas/api/incidents', {
+    const res = await axios.get('https://fagron.topdesk.net/tas/api/incidents', {
         headers: {
         Accept: 'application/json',
         Authorization: `${token}`,
@@ -24,17 +24,27 @@ console.count();
         all: true,
         fields: 'number, caller, responded, status, briefDescription, dynamicName, caller.branch.clientReferenceNumber, caller.dynamicName, request' 
         }
-    }).then(res => {
+        })
+        
+    //     legacy code
+    //     .then(res => {
 
+    //     // get data variable
+    //     var data = res.data;
+
+    //     console.log("last ticket in getIncidents: " + lastTicket);
+    //     checkLastTicket(data);
+    //     console.log("made it out of check with last ticket: " + lastTicket + "\n")
+    // })
+        
         // get data variable
         var data = res.data;
 
         console.log("last ticket in getIncidents: " + lastTicket);
         checkLastTicket(data);
         console.log("made it out of check with last ticket: " + lastTicket + "\n")
-    })
-    }
-    catch (err) {
+
+    } catch (err) {
     if (axios.isAxiosError(err)) {
         console.log('error message: ', err.message);
         throw err.message;
