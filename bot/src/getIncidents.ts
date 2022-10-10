@@ -24,7 +24,8 @@ console.count();
         all: true,
         fields: 'number, caller, responded, status, briefDescription, dynamicName, caller.branch.clientReferenceNumber, caller.dynamicName, request' 
         }
-        })
+    })
+
         
     //     legacy code
     //     .then(res => {
@@ -38,20 +39,23 @@ console.count();
     // })
         
         // get data variable
-        var data = res.data;
+        
+    var data = await res.data;
+    console.log("last ticket in getIncidents: " + lastTicket);
+    await checkLastTicket(data);
+    console.log("made it out of check with last ticket: " + lastTicket + "\n")
 
-        console.log("last ticket in getIncidents: " + lastTicket);
-        checkLastTicket(data);
-        console.log("made it out of check with last ticket: " + lastTicket + "\n")
 
     } catch (err) {
     if (axios.isAxiosError(err)) {
-        console.log('error message: ', err.message);
-        throw err.message;
+        console.log('Error Message: ', err.message);
+        console.log('Will try again in 10 seconds');
+        return;
     }
     else {
-        console.log('unexpected error: ', err);
-        throw 'An unexpected error occurred';
+        console.log('Unexpected Error: ', err);
+        console.log('Will try again in 10 seconds');
+        return;
     }
     }
 }
