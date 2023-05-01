@@ -5,7 +5,7 @@
     "id": "{{state.fx-resource-appstudio.teamsAppId}}",
     "packageName": "com.microsoft.teams.extension",
     "developer": {
-        "name": "Teams App, Inc.",
+        "name": "Nicholis Fowler",
         "websiteUrl": "https://www.example.com",
         "privacyUrl": "https://www.example.com/termofuse",
         "termsOfUseUrl": "https://www.example.com/privacy"

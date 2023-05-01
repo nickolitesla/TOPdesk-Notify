@@ -38,7 +38,8 @@
                 "notification"
             ],
             "sso": false,
-            "deploy": true
+            "deploy": true,
+            "artifactFolder": "bot"
         },
         {
             "name": "azure-web-app",

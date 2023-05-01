@@ -3,7 +3,7 @@ import { lastTicket, checkLastTicket } from "./checkLastTicket";
 
 const token = process.env.TOPDESK_API_TOKEN;
 
-const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 COM313 COM317 COM333 COM335"
+const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 COM313 COM317 COM333 COM335 COM339"
 
 // API call every 10s to see if there is a new ticket in First line
 // Filter by JSON fields "clientReferenceNumber", "status", "number"
@@ -12,6 +12,7 @@ const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 C
 export async function getIncidents() {
 
 // count how many times we've called the TOPdesk API
+
 console.count();
 
     try {
@@ -48,11 +49,13 @@ console.count();
 
     } catch (err) {
     if (axios.isAxiosError(err)) {
+        console.count("axios error");
         console.log('Error Message: ', err.message);
         console.log('Will try again in 10 seconds');
         return;
     }
     else {
+        console.count("axios error");
         console.log('Unexpected Error: ', err);
         console.log('Will try again in 10 seconds');
         return;

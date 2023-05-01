@@ -4,13 +4,13 @@ import sendPost from "./internal/sendPost";
 export var lastTicket = '';
 
 // COMxxx list for NA
-const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 COM313 COM317 COM333 COM335"
+const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 COM313 COM317 COM333 COM335 COM339"
 
 // function that will set last ticket 
 export function checkLastTicket(data) {
    
     // COMxxx list for NA
-    const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 COM313 COM317 COM333 COM335"
+    const acceptableCOM = "COM224 COM225 COM258 COM265 COM271 COM274 COM290 COM295 COM313 COM317 COM333 COM335 COM339"
   
     // if lastTicket is empty
     if (lastTicket == '') {

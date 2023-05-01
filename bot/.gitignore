@@ -11,3 +11,4 @@ lib/
 
 # Local data
 .notification.localstore.json
+.fx-*
