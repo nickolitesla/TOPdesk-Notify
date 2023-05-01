@@ -124,13 +124,13 @@ server.post(
   }
 );
 
-
   // The Teams Toolkit bot registration configures the bot with `/api/messages` as the
   // Bot Framework endpoint. If you customize this route, update the Bot registration
   // in `/templates/provision/bot.bicep`.
   server.post("/api/messages", async (req, res) => {
     await bot.requestHandler(req, res);
   });
+
 
 // Run the getIncidents function every 10s
 setInterval(getIncidents, 10 * 1000);
