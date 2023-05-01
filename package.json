@@ -4,6 +4,7 @@
     "description": "",
     "author": "Nick Fowler",
     "scripts": {
+        "v": "node -v",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "devDependencies": {
